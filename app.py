@@ -366,13 +366,36 @@ Question:
 # Google Drive
 # -----------------------------
 def download_drive_source(url):
-    """Download a single public Google Drive file."""
+    """Download a public Google Drive file or folder."""
 
     temp_dir = Path(
         tempfile.mkdtemp(prefix="document_assistant_drive_")
     )
 
-    output_file = temp_dir / "document.pdf"
+    # -----------------------------
+    # Google Drive folder
+    # -----------------------------
+    if "/folders/" in url:
+        downloaded_files = gdown.download_folder(
+            url,
+            output=str(temp_dir),
+            quiet=False,
+            remaining_ok=True,
+        )
+
+        if not downloaded_files:
+            return []
+
+        return [
+            Path(file_path)
+            for file_path in downloaded_files
+            if Path(file_path).is_file()
+        ]
+
+    # -----------------------------
+    # Google Drive single file
+    # -----------------------------
+    output_file = temp_dir / "drive_file"
 
     downloaded = gdown.download(
         url=url,
@@ -384,19 +407,6 @@ def download_drive_source(url):
         return [Path(downloaded)]
 
     return []
-    # Try a single-file URL if folder download did not return files.
-    output_file = temp_dir / "drive_file"
-    downloaded = gdown.download(
-        url=url,
-        output=str(output_file),
-        quiet=True,
-    )
-
-    if downloaded and Path(downloaded).is_file():
-        return [Path(downloaded)]
-
-    return []
-
 
 def load_files_into_app(file_paths):
     """Extract, chunk and embed new files only."""
