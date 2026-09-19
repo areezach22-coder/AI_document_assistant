@@ -366,25 +366,25 @@ Question:
 # Google Drive
 # -----------------------------
 def download_drive_source(url):
-    """
-    Download a public Google Drive file or folder.
+    """Download a single public Google Drive file."""
 
-    For folders, gdown downloads the files recursively when the folder
-    is publicly accessible.
-    """
-    temp_dir = Path(tempfile.mkdtemp(prefix="document_assistant_drive_"))
-
-    # gdown supports Google Drive file and folder URLs.
-    output = gdown.download_folder(
-        url=url,
-        output=str(temp_dir),
-        quiet=True,
-        use_cookies=False,
+    temp_dir = Path(
+        tempfile.mkdtemp(prefix="document_assistant_drive_")
     )
 
-    if output:
-        return [Path(item) for item in output if Path(item).is_file()]
+    output_file = temp_dir / "document.pdf"
 
+    downloaded = gdown.download(
+        url=url,
+        output=str(output_file),
+        quiet=False,
+        fuzzy=True,
+    )
+
+    if downloaded and Path(downloaded).is_file():
+        return [Path(downloaded)]
+
+    return []
     # Try a single-file URL if folder download did not return files.
     output_file = temp_dir / "drive_file"
     downloaded = gdown.download(
