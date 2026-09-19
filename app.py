@@ -365,13 +365,56 @@ Question:
 # -----------------------------
 # Google Drive
 # -----------------------------
+# -----------------------------
+# Google Drive
+# -----------------------------
 def download_drive_source(url):
-    """Download a public Google Drive file or folder."""
+    """Download a single public Google Drive file."""
 
     temp_dir = Path(
         tempfile.mkdtemp(prefix="document_assistant_drive_")
     )
 
+    # Extract Google Drive file ID
+    match = re.search(r"/file/d/([a-zA-Z0-9_-]+)", url)
+
+    if not match:
+        raise ValueError("Invalid Google Drive file link.")
+
+    file_id = match.group(1)
+
+    # Download the file
+    output_file = temp_dir / "drive_file"
+
+    downloaded = gdown.download(
+        id=file_id,
+        output=str(output_file),
+        quiet=False,
+    )
+
+    if not downloaded or not Path(downloaded).is_file():
+        return []
+
+    downloaded_path = Path(downloaded)
+
+    # Check file type
+    file_signature = downloaded_path.read_bytes()[:10]
+
+    # PDF
+    if file_signature.startswith(b"%PDF"):
+        final_path = downloaded_path.with_suffix(".pdf")
+
+    # DOCX
+    elif file_signature.startswith(b"PK"):
+        final_path = downloaded_path.with_suffix(".docx")
+
+    # TXT / MD
+    else:
+        final_path = downloaded_path.with_suffix(".txt")
+
+    downloaded_path.rename(final_path)
+
+    return [final_path]
     # -----------------------------
     # Google Drive folder
     # -----------------------------
