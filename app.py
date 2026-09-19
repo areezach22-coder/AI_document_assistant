@@ -391,7 +391,6 @@ def download_drive_source(url):
         url=url,
         output=str(output_file),
         quiet=True,
-        fuzzy=True,
     )
 
     if downloaded and Path(downloaded).is_file():
